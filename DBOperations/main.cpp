@@ -15,7 +15,7 @@ using namespace std;
 // [Microsoft][ODBC Driver 17 for SQL Server]TCP Provider: Timeout error [258]. (SQL State: 08001, Native Error: 258)
 //	 my personal fix has been adding a firewall rule for my client and then removing it again lol
 //	 this seems to be an issue with the database falling asleep or something but not entirely sure
-
+ 
 int main() {
 	//IMPORTANT: you will need to add your own UID and PASSWORD since this is a public repo
 	string connectionString = //ODBC connection string direct from Azure portal 
