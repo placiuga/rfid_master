@@ -8,7 +8,11 @@
 // type: the type of ODBC handle (e.g., SQL_HANDLE_ENV, SQL_HANDLE_DBC, SQL_HANDLE_STMT)
 //Outputs: None (prints error details to standard error stream)
 //Sources: https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgetdiagrec-function?view=sql-server-ver16
+// Note that SQLGetDiagRecA is used for ANSI strings; if using Unicode, SQLGetDiagRecW would be appropriate instead.
+// Documentation follows regular SQLGetDiagRec syntax but they all work the same; with the A you can declare SQLCHAR
+// but for W you would declare SQLWCHAR instead. In this code, we are using ANSI string. learned that the hard way.
 //-------------------------------------------------------------------------------------------/
+
 void print_error(const std::string& message, SQLHANDLE handle, SQLSMALLINT type) {
 	SQLCHAR sqlState[6] = { 0 }, errorMessage[256] = { 0 }; //These hold the SQL state code and error message retrieved from ODBC
 	SQLINTEGER nativeError; //This holds the native error code in int form
@@ -22,6 +26,7 @@ void print_error(const std::string& message, SQLHANDLE handle, SQLSMALLINT type)
 	}
 	//The above if statement retrieves error details and prints them to the standard error stream.
 	// If it fails to retrieve details, it prints a generic message.
+	
 }
 
 bool dbConnect(DbConnection& db, const std::string& connectionString) {
@@ -29,7 +34,7 @@ bool dbConnect(DbConnection& db, const std::string& connectionString) {
 	SQLSetEnvAttr(db.envHandle, SQL_ATTR_ODBC_VERSION, (void*)SQL_OV_ODBC3, 0); //Set the ODBC version to 3.0
 	SQLAllocHandle(SQL_HANDLE_DBC, db.envHandle, &db.connHandle); //Allocate a connection handle
 
-	SQLCHAR outConnStr[1024]; //This will hold the output connection string that actually gets used
+	SQLCHAR outConnStr[1024]; //This will hold the output connection string that actually gets used, good for debugging but NULL works
 	SQLSMALLINT outLen; //This will hold the length
 
 	//The below call makes an attempt to connect to the database using the connection string.
