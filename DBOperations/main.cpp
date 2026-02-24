@@ -8,6 +8,7 @@ using namespace std;
 // - The connection string must be correctly configured with the appropriate server, database, user ID, and password
 // - The SQL Database must allow connections from the IP address of the machine running this code (check firewall settings for Azure portal)
 //-------------------------------------------------------------------------------------------/
+//Useful documentation for ODBC: https://github.com/microsoft/VCSamples/blob/master/VC2015Samples/ODBC%20database%20sample%20(windows)/C%2B%2B/odbcsql.cpp
 
 //Notes: sometimes the connection fails even if all of the above are true.
 // 	 Message might look like the following: 
