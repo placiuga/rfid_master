@@ -18,7 +18,7 @@ struct DbConnection {
 	//Identifies a connection (what is the driver, where is the data) and points to internal info
 	//Later when the driver connection happens, it represents the connection created by the driver manager
 	//When it succeeds, this is further used to track the state of the connection
-	//Through the connection, SQL statements can be executed
+	//Through this connection, SQL statements can be executed etc
 };
 
 //error printer function declaration for use in DB.cpp
