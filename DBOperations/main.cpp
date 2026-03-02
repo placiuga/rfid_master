@@ -35,6 +35,10 @@ string pwd = getEnvOrThrow("AZURE_PWD"); //Get password from environment variabl
 // setx AZURE_UID "username"
 // setx AZURE_PWD "password"
 
+//On linux:
+// export AZURE_UID="username"
+// export AZURE_PWD="password"
+
  
 int main() {
 	//IMPORTANT: you will need to add your own UID and PASSWORD since this is a public repo
@@ -82,7 +86,30 @@ int main() {
 		cout << col1 << endl;
 	}
 
-	
+	std::cout << "Select a table to view: ";
+	string selectedTable;
+	cin >> selectedTable;
+	if(!selectedTable.empty()) {
+		string query = "SELECT * FROM " + selectedTable; //Construct a query to select all data from the chosen table
+		SQLRETURN retQuery = SQLExecDirectA(stmtHandle, (SQLCHAR*)query.c_str(), SQL_NTS); //Execute the query
+		if (retQuery != SQL_SUCCESS && retQuery != SQL_SUCCESS_WITH_INFO) {
+			print_error("Failed to execute query: " + query, db.connHandle, SQL_HANDLE_DBC);
+			return 1;
+		}
+		std::cout << "Executed query: " << query << std::endl;
+
+	}
+
+	SQLCloseCursor(stmtHandle); //Close the cursor to reset the statement handle for the next query
+
+
+	SQLSMALLINT numCols;
+	SQLNumResultCols(stmtHandle, &numCols); //Get the number of columns in the result set
+	for(int i = 1; i <= numCols; i++) {
+		SQLCHAR colName[256] = { 0 };
+		SQLDescribeColA(stmtHandle, i, colName, sizeof(colName), NULL, NULL, NULL, NULL, NULL); //Get the name of each column
+		std::cout << "Column " << i << ": " << colName << std::endl;
+	}
 
 
 
