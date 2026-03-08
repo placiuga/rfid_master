@@ -112,3 +112,36 @@ void printMacAddress(byte mac[]) {
     }
     Serial.println();
 }
+
+
+//note: in sendData, server will be set to SECRET_IP (which will probably be pi). For testing, put your own IP in
+//arduino_secrets.h, or replace server[] in enterprise.ino
+void sendData(String server, String machineID, String studentID, String action) {
+    //stop previous just in case
+    client.stop();
+
+    //connect to localhost
+    if (client.connect(server.c_str(), 80)) {
+        //display sent info for debug 
+        Serial.println("Sending: MachineID: " + machineID + ", Student ID: " + studentID + ", Action: " + action);
+
+        //generate url based on delivered info
+        String url = "/sqltest/index.php?machineID=" + machineID +
+                    "&studentID=" + studentID +
+                    "&action=" + action;
+
+        //send info to php
+        client.println("GET " + url + " HTTP/1.1");
+        client.println("Host: " + server);
+        client.println("Connection: close");
+        client.println();
+
+        //display what was sent for debug
+        Serial.println("Request sent:");
+        Serial.println(url);
+        client.stop();
+    }
+    else {
+        Serial.println("Connection failed");
+    }
+}
