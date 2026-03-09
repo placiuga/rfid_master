@@ -13,4 +13,3 @@ void serverConnect(const char* server);
 void printWifiData();
 void printCurrentNet();
 void printMacAddress(byte mac[]);
-void sendData(String server, String machineID, String studentID, String action);
