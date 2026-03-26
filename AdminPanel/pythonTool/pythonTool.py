@@ -40,7 +40,7 @@ def create_user():
         uid = pn532.read_passive_target(timeout=1.0)
         if uid is not None:
             print("Tag detected! UID:", [hex(i) for i in uid])
-        break
+            break
     name = input("Enter student name: ")
     userID = input("TEMP: Enter PK UserID: ")
     FSUID = input("Enter FSUID: ")
