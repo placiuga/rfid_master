@@ -41,12 +41,13 @@ def create_user():
         if uid is not None:
             print("Tag detected! UID:", [hex(i) for i in uid])
             break
+    uidStr = ''.join(f'{i:02X}' for i in uid) ##Convert UID to hex string (join i in uid with uppercase hex, pad to 2 chars to add leading zero)
     name = input("Enter student name: ")
     userID = input("TEMP: Enter PK UserID: ")
     FSUID = input("Enter FSUID: ")
     status = input("Enter status (active/inactive): ")
     print(f"Creating user with name: {name}, userID: {userID}, FSUID: {FSUID}, status: {status}")
-    query = f"INSERT INTO UserTable (Name, UserID, FSUID, Status, rfid_uid) VALUES ('{name}', '{userID}', '{FSUID}', '{status}', '{uid}')"
+    query = f"INSERT INTO UserTable (Name, UserID, FSUID, Status, rfid_uid) VALUES ('{name}', '{userID}', '{FSUID}', '{status}', '{uidStr}')"
     print("Executing query:", query)
     print("Success! User created.")
 
