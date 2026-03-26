@@ -2,9 +2,13 @@ import board
 import busio
 import digitalio
 from adafruit_pn532.spi import PN532_SPI
+from rich import print
 
 print(r"""
+[bold #EE7624]
 //////////////////////////////////////////////////////////////////////////////////
+[/bold #EE7624]
+[bold #782F40]
 
               .o88o.  o8o        .o8            .oooo.     .oooo.    .ooooo.   
               888 `"  `"'       "888          .dP""Y88b   d8P'`Y8b  888' `Y88. 
@@ -13,9 +17,10 @@ print(r"""
      888      888     888  888   888  8888888      `88b. 888    888       888' 
      888      888     888  888   888          o.   .88P  `88b  d88'     .88P'  
     d888b    o888o   o888o `Y8bod88P"         `8bd88P'    `Y8bd8P'    .oP'     
-
+[/bold #782F40]
+[bold #EE7624]
 //////////////////////////////////////////////////////////////////////////////////
-                                                                                          
+[/bold #EE7624]                                                                                        
 Welcome to the RFID Lab Access admin panel!
 """)
 
