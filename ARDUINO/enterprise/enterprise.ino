@@ -14,33 +14,23 @@
 #include "arduino_secrets.h"
 
 WiFiClient client;
-char server[] = "10.142.127.21"; //This is my laptop's ipv4 address, will replace with pi eventually
+char server[] = SECRET_IP; //This is my laptop's ipv4 address, will replace with pi eventually
 
 ///////please enter your sensitive data in the Secret tab/arduino_secrets.h
 char ssid[] = SECRET_SSID;  // your WPA2 enterprise network SSID (name)
 char user[] = SECRET_USER;  // your WPA2 enterprise username
 char pass[] = SECRET_PASS;  // your WPA2 enterprise password
 int status = WL_IDLE_STATUS;     // the WiFi radio's status
-
-
+String machineID = "1";  
 
 void setup() {
-
-
-    serialConnect();
-
+  LEDsetup();
+  serialConnect();
 	enterpriseConnect(ssid, user, pass);
-
 	serverConnect(server);
-  
-    
+  pixels.show();  
 }
 
 void loop() {
-  //Writes the HTML of my apache index page to serial if connection succeeds
-  while (client.available()) {
-    char c = client.read();
-    Serial.write(c);
-  }
 
 }
