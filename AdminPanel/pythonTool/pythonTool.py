@@ -5,6 +5,8 @@ from adafruit_pn532.spi import PN532_SPI
 from rich import print
 from rich.table import Table
 from rich.console import Console
+from rich.panel import Panel
+from rich.align import Align
 import mariadb
 import sys
 
@@ -62,7 +64,7 @@ def exit_program():
     print("Exiting program. Goodbye!")
     exit()
 
-def create_user():
+def create_user(conn):
     print("Configuring PN532 RFID reader...")
     pn532 = setup_pn532()
     print("Waiting for tag...")
@@ -79,7 +81,22 @@ def create_user():
     print(f"Creating user with name: {name}, userID: {userID}, FSUID: {FSUID}, status: {status}")
     query = f"INSERT INTO UserTable (Name, UserID, FSUID, Status, rfid_uid) VALUES ('{name}', '{userID}', '{FSUID}', '{status}', '{uidStr}')"
     print("Executing query:", query)
-    print("Success! User created.")
+
+    try:
+        cur = conn.cursor()
+        existCheck = f"SELECT * FROM UserTable WHERE rfid_uid = '{uidStr}'"
+        cur.execute(existCheck)
+        if cur.fetchone() is not None:
+            print("Error: A user with this RFID UID already exists in the database. Aborting user creation.")
+            return
+        cur.execute(query)
+        conn.commit()
+        print(f"\nQuery executed successfully. {cur.rowcount} row(s) affected.")
+        print("Success! User created.")
+
+    except mariadb.Error as e:
+        print(f"Error executing query: {e}")
+
 
 def executeSQL(conn):
     print("WARNING: This option allows you to execute raw SQL queries on the database. Use with caution!")
@@ -117,6 +134,13 @@ def executeSQL(conn):
         print(f"Error executing query: {e}")
 
 def printMenu():
+    console = Console()
+    header = Panel(
+        Align.center("[bold #EE7624]Main Menu[/bold #EE7624]"),
+        border_style="#782F40",
+        padding=(1, 4)
+    )
+    console.print(header)
     print("1: Create user from tag")
     print("2: Execute raw SQL query (ADVANCED)")
     print("\n0: Exit\n")
@@ -153,7 +177,7 @@ while menu != 0:
     if menu == 0:
         exit_program()
     elif menu == 1:
-        create_user()
+        create_user(conn)
     elif menu == 2:
         executeSQL(conn)
 
