@@ -3,6 +3,8 @@ import busio
 import digitalio
 from adafruit_pn532.spi import PN532_SPI
 from rich import print
+import mariadb
+import sys
 
 print(r"""
 [bold #EE7624]
@@ -23,6 +25,27 @@ print(r"""
 [/bold #EE7624]                                                                                        
 Welcome to the RFID Lab Access admin panel!
 """)
+print("Attempting to connect to database...")
+
+
+def connectToDB():
+    username = input("Please enter your mariaDB username: ")
+    pwd = input("Please enter your mariaDB password: ")
+    try:
+        conn = mariadb.connect(
+            user = f"{username}",
+            password= f"{pwd}",
+            host = "127.0.0.1",
+            port = 3306,
+            database = "rfid"
+            
+            )
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        sys.exit(1)
+    cur = conn.cursor()
+    print(f"Connection success! User {username} accessing local database 'rfid' ")
+    return cur
 
 def setup_pn532():
     spi = busio.SPI(board.SCK, board.MOSI, board.MISO)
@@ -83,6 +106,12 @@ def get_menu_choice():
             return 0
 
 menu = -1
+cur = connectToDB()
+print("Current tables in databse:")
+cur.execute("SHOW TABLES;")
+for(table,) in cur:
+    print(table)
+
 while menu != 0:
     printMenu()
     menu = get_menu_choice()
