@@ -3,6 +3,8 @@ import busio
 import digitalio
 from adafruit_pn532.spi import PN532_SPI
 from rich import print
+from rich.table import Table
+from rich.console import Console
 import mariadb
 import sys
 
@@ -45,7 +47,7 @@ def connectToDB():
         sys.exit(1)
     cur = conn.cursor()
     print(f"Connection success! User {username} accessing local database 'rfid' ")
-    return cur
+    return cur, conn
 
 def setup_pn532():
     spi = busio.SPI(board.SCK, board.MOSI, board.MISO)
@@ -79,14 +81,45 @@ def create_user():
     print("Executing query:", query)
     print("Success! User created.")
 
+def executeSQL(conn):
+    print("WARNING: This option allows you to execute raw SQL queries on the database. Use with caution!")
+    print("Type 'cancel' to return to main menu.")
+    query = input("SQL> ").strip()
+    if query.lower() == 'cancel' or not query:
+        print("Returning to main menu.")
+        return
+
+    try:
+        cur = conn.cursor()
+        cur.execute(query)
+        if cur.description:
+            cols = [desc[0] for desc in cur.description]
+            rows = cur.fetchall()
+
+            print(f"Query executed successfully. {len(rows)} rows returned.")
+            table = Table(title = "Query Results")
+            for col in cols:
+                table.add_column(col)
+            for row in rows:
+                table.add_row(*[str(value) for value in row])
+
+            console = Console()
+            console.print(table)
+            if not rows:
+                print("(no rows returned)")
+
+        else:
+            conn.commit()
+            print(f"\nQuery executed successfully. {cur.rowcount} row(s) affected.")
+
+
+    except mariadb.Error as e:
+        print(f"Error executing query: {e}")
+
 def printMenu():
     print("1: Create user from tag")
+    print("2: Execute raw SQL query (ADVANCED)")
     print("\n0: Exit\n")
-
-menuActions = {
-    0: exit_program,
-    1: create_user
-    }
 
 
 def get_menu_choice():
@@ -94,10 +127,10 @@ def get_menu_choice():
         try:
             choice = int(input("Enter menu number: "))
             
-            if choice in [0, 1]:
+            if choice in [0, 1, 2]:
                 return choice
             else:
-                print("Invalid choice. Enter 0 or 1.\n")
+                print("Invalid choice. \n")
                 
         except ValueError:
             print("Invalid input. Please enter a number.\n")
@@ -106,19 +139,23 @@ def get_menu_choice():
             return 0
 
 menu = -1
-cur = connectToDB()
+cur, conn = connectToDB()
 print("Current tables in databse:")
 cur.execute("SHOW TABLES;")
 for(table,) in cur:
     print(table)
 
+
 while menu != 0:
     printMenu()
     menu = get_menu_choice()
 
-    action = menuActions.get(menu)
-    if action:
-        action()
+    if menu == 0:
+        exit_program()
+    elif menu == 1:
+        create_user()
+    elif menu == 2:
+        executeSQL(conn)
 
 
 print("Exiting program. Goodbye!")
