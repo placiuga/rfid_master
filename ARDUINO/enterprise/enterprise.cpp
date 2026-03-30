@@ -1,11 +1,24 @@
 #include "enterprise.h"
 
+WS2812 pixels(10, 13);
+
 void serialConnect() {
     //Initialize serial and wait for port to open:
     Serial.begin(9600);
     while (!Serial) {
         ; // wait for serial port to connect. Needed for native USB port only
     }
+}
+
+void LEDsetup() {
+    pixels.begin();
+    pixels.clear();
+    pixels.setBrightness(255);
+    pixels.setPixelColor(0, 255, 255, 0);
+    pixels.setPixelColor(1, 255, 255, 0);
+    pixels.show();
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, LOW);
 }
 
 void enterpriseConnect(const char* ssid, const char* user, const char* pass) {
@@ -35,14 +48,20 @@ void enterpriseConnect(const char* ssid, const char* user, const char* pass) {
         delay(10000);
     }
 
+    if(status == WL_CONNECTED) {
+        Serial.println("Connected");
+        digitalWrite(LED_BUILTIN, HIGH);
+        pixels.setBrightness(255);
+        pixels.setPixelColor(0, 0, 0, 255);
+        pixels.show();
+    }
+
     // you're connected now, so print out the data:
     Serial.print("You're connected to the network");
     printCurrentNet();
     printWifiData();
 
     Serial.println("Connecting to server...");
-
-
 }
 
 void serverConnect(const char* server)
@@ -101,12 +120,12 @@ void printCurrentNet() {
 }
 
 void printMacAddress(byte mac[]) {
-    for (int i = 0; i < 6; i++) {
+    for (int i = 5; i >= 0; i--) {
         if (mac[i] < 16) {
             Serial.print("0");
         }
         Serial.print(mac[i], HEX);
-        if (i < 5) {
+        if (i > 0) {
             Serial.print(":");
         }
     }
@@ -116,18 +135,18 @@ void printMacAddress(byte mac[]) {
 
 //note: in sendData, server will be set to SECRET_IP (which will probably be pi). For testing, put your own IP in
 //arduino_secrets.h, or replace server[] in enterprise.ino
-void sendData(String server, String machineID, String studentID, String action) {
+void sendData(String server, String machineID, String rfid_uid, String action) {
     //stop previous just in case
     client.stop();
 
     //connect to localhost
     if (client.connect(server.c_str(), 80)) {
         //display sent info for debug 
-        Serial.println("Sending: MachineID: " + machineID + ", Student ID: " + studentID + ", Action: " + action);
+        Serial.println("Sending: MachineID: " + machineID + ", RFID_UID: " + rfid_uid + ", Action: " + action);
 
         //generate url based on delivered info
-        String url = "/sqltest/index.php?machineID=" + machineID +
-                    "&studentID=" + studentID +
+        String url = "/rfid/index.php?machineID=" + machineID +
+                    "&rfid_uid=" + rfid_uid +
                     "&action=" + action;
 
         //send info to php
@@ -137,9 +156,68 @@ void sendData(String server, String machineID, String studentID, String action) 
         client.println();
 
         //display what was sent for debug
-        Serial.println("Request sent:");
-        Serial.println(url);
+        Serial.println("Request sent: " + url);
+        unsigned long startTime = millis();
+        while (client.connected() && !client.available()) {
+            if (millis() - startTime > 3000) {
+                Serial.println("Timeout waiting for response");
+                client.stop();
+                return;
+            }
+            delay(10);
+        }
+
+        //read the response from php script
+        String response = "";
+        while (client.available()) {
+            char c = client.read();
+            response += c;
+        }
         client.stop();
+        Serial.println(response);
+
+        //look for a blank line to know when to end
+        int bodyIndex = response.indexOf("\r\n\r\n");
+        String body = (bodyIndex != -1) ? response.substring(bodyIndex + 4) : response;
+        body.trim(); //remove white space + newlines
+
+        //check for authorization response (or denial, or error)
+        if (body.indexOf("AUTHORIZED") != -1) {
+            Serial.println("Access granted");
+            digitalWrite(LED_BUILTIN, HIGH);           
+            if(action == "start") {
+                pixels.setPixelColor(1, 0, 255, 0);         //green LED
+                pixels.show();
+            }
+            else if(action == "end" ) {
+                pixels.setPixelColor(1, 255, 255, 0);       //yellow LED
+                pixels.show();
+            }
+        } 
+        else if (body.indexOf("DENIED") != -1) {
+            Serial.println("Access denied");
+            pixels.setPixelColor(1, 255, 0, 0);             //red LED
+            pixels.show();
+            delay(1000);
+            pixels.setPixelColor(1, 255, 255, 0);           
+            pixels.show();
+        } 
+        else if (body.indexOf("ERROR") != -1) {
+            pixels.setPixelColor(1, 255, 0, 0); 
+            pixels.show();
+            delay(1000);
+            pixels.setPixelColor(1, 255, 255, 0);      
+            pixels.show();
+            
+        } 
+        else {
+            Serial.println("Unknown response");
+            pixels.setPixelColor(1, 255, 0, 0); 
+            pixels.show();
+            delay(1000);
+            pixels.setPixelColor(1, 255, 255, 0); 
+            pixels.show();
+        }
     }
     else {
         Serial.println("Connection failed");

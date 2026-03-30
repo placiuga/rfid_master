@@ -5,90 +5,86 @@
 //IT ALSO REQUIRES THE DB TO BE NAMED PROJECTTEST.
 //WORKS AT http://localhost/phpmyadmin/index.php
 
-$conn = new mysqli("localhost", "root", "", "projecttest");
 
+$conn = new mysqli("localhost", "root", "", "rfid");
 if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+    die("ERROR\nConnection failed: " . $conn->connect_error);
 }
 
-//Check for all required inputs
-if (!isset($_GET['machineID'], $_GET['studentID'], $_GET['action'])) {
-    die("Missing parameters");
+//check for parameters
+if (!isset($_GET['machineID'], $_GET['rfid_uid'], $_GET['action'])) {
+    die("ERROR\nMissing parameters");
 }
 
-//Set inputs
-$machineID = $_GET['machineID'];
-$studentID = $_GET['studentID'];
-$action = $_GET['action'];
+//sanitize
+$machineID = $conn->real_escape_string($_GET['machineID']);
+$RFID_UID = $conn->real_escape_string($_GET['rfid_uid']);
+$action = $conn->real_escape_string($_GET['action']);
 
-//Check if user exists
-$userQuery = "SELECT * FROM StudentTable 
-              WHERE StudentID='$studentID'";
+//user existence check
+$userQuery = "SELECT * FROM UserTable WHERE RFID_UID='$RFID_UID'";
 $userResult = $conn->query($userQuery);
 $userExists = ($userResult && $userResult->num_rows > 0);
+$studentID = null;
 
-$sql = "";
+if ($userExists) {
+    $row = $userResult->fetch_assoc();
+    $studentID = $row['StudentID'];
+}
 
-//Check if machine exists
-$machineQuery = "SELECT * FROM MachineTable 
-              WHERE MachineID='$machineID'";
+//machine existence check
+$machineQuery = "SELECT * FROM MachineTable WHERE MachineID='$machineID'";
 $machineResult = $conn->query($machineQuery);
 $machineExists = ($machineResult && $machineResult->num_rows > 0);
 
-//log errors
-$sql = "";
-
-if(!$userExists && !$machineExists) {
+//logging for nonexistent user/machine
+if (!$userExists && !$machineExists) {
     $sql = "INSERT INTO LoggingTable (startTime, endTime, MachineID, StudentID, Notes)
-    VALUES (NOW(), NOW(), 'DNE', 'DNE', 'Failed User ID: $studentID, Failed Machine ID: $machineID')";
+            VALUES (NOW(), NOW(), 'DNE', 'DNE', 'Failed RFID: $RFID_UID, Failed Machine: $machineID')";
     $conn->query($sql);
-    die("User and Machine do not exist.");
-}
-else if(!$userExists) {
+    die("ERROR\nUser and Machine do not exist.");
+} 
+else if (!$userExists) {
     $sql = "INSERT INTO LoggingTable (startTime, endTime, MachineID, StudentID, Notes)
-    VALUES (NOW(), NOW(), '$machineID', 'DNE', 'Failed User ID: $studentID')";
+            VALUES (NOW(), NOW(), '$machineID', 'DNE', 'Failed RFID: $RFID_UID')";
     $conn->query($sql);
-    die("User does not exist.");
-}
-else if(!$machineExists) {
+    die("ERROR\nUser does not exist.");
+} 
+else if (!$machineExists) {
     $sql = "INSERT INTO LoggingTable (startTime, endTime, MachineID, StudentID, Notes)
-    VALUES (NOW(), NOW(), '0', '$studentID', 'Failed Machine ID: $machineID')";
+            VALUES (NOW(), NOW(), '0', '$studentID', 'Failed Machine: $machineID')";
     $conn->query($sql);
-    die("Machine does not exist.");
+    die("ERROR\nMachine does not exist.");
 }
 
-$sql = "";
-
-//Check if user is authenticated
-$authQuery = "SELECT * FROM AuthenticationTable
-             WHERE MachineID = '$machineID' AND StudentID = '$studentID'";
+//authorization check
+$authQuery = "SELECT * FROM MachineAuthorizations WHERE MachineID='$machineID' AND StudentID='$studentID'";
 $authResult = $conn->query($authQuery);
 $authorized = ($authResult && $authResult->num_rows > 0);
 
-//check if machine or user is already active
+//check if active
 $activeQuery = "SELECT * FROM LoggingTable
-                WHERE (MachineID='$machineID'
-                OR StudentID='$studentID')
-                AND endTime IS NULL";
-
+                WHERE (MachineID='$machineID' OR StudentID='$studentID') AND endTime IS NULL";
 $activeResult = $conn->query($activeQuery);
 $activeSessionExists = ($activeResult && $activeResult->num_rows > 0);
 
-//log
-if ($authorized && $action == "start") {
+//authorization/denial check
+if ($authorized && $action === "start") {
     if ($activeSessionExists) {
-        die("User or machine already in use.");
+        die("DENIED\nUser or machine already in use.");
     }
-    
-    echo("Authorization success. Access allowed. ");
     $sql = "INSERT INTO LoggingTable (startTime, MachineID, StudentID, Notes)
             VALUES (NOW(), '$machineID', '$studentID', 'Successful Authorization')";
-} 
-else if ($authorized && $action == "end") {
-    if (!$activeSessionExists) {
-        die("No active session to end.");
+    if ($conn->query($sql) === TRUE) {
+        echo "AUTHORIZED\nAccess allowed";
+    } else {
+        echo "ERROR\nLogging error: " . $conn->error;
     }
-    
+} 
+else if ($authorized && $action === "end") {
+    if (!$activeSessionExists) {
+        die("DENIED\nNo active session to end.");
+    }
     $sql = "UPDATE LoggingTable 
             SET endTime = NOW()
             WHERE MachineID='$machineID' 
@@ -96,20 +92,21 @@ else if ($authorized && $action == "end") {
             AND endTime IS NULL
             ORDER BY startTime DESC
             LIMIT 1";
+    if ($conn->query($sql) === TRUE) {
+        echo "AUTHORIZED\nSession ended";
+    } else {
+        echo "ERROR\nLogging error: " . $conn->error;
+    }
 } 
 else if (!$authorized) {
     $sql = "INSERT INTO LoggingTable (startTime, endTime, MachineID, StudentID, Notes)
             VALUES (NOW(), NOW(), '$machineID', '$studentID', 'Authorization Failed')";
-    echo("Authorization failed. Access denied. ");
-}
-else {
-    die("Invalid action");
-}
+    $conn->query($sql);
+    echo "DENIED\nAuthorization failed";
 
-if ($conn->query($sql) === TRUE) {
-    echo "Logged successfully. ";
-} else {
-    echo "Logging error: " . $conn->error;
+} 
+else {
+    echo "ERROR\nInvalid action";
 }
 
 $conn->close();
