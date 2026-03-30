@@ -135,16 +135,25 @@ def executeSQL(conn):
 
 def printMenu():
     console = Console()
+    menuText = (
+        "[bold #EE7624]Main Menu[/bold #EE7624]\n"
+        "[bold]1: [/] Create user from tag\n"
+        "[bold]2: [/] Execute raw SQL query (ADVANCED)\n"
+        "\n[bold]0: [/] Exit\n"
+         )
+
     header = Panel(
         Align.center("[bold #EE7624]Main Menu[/bold #EE7624]"),
         border_style="#782F40",
         padding=(1, 4)
     )
-    console.print(header)
-    print("1: Create user from tag")
-    print("2: Execute raw SQL query (ADVANCED)")
-    print("\n0: Exit\n")
-
+    console.print(
+        Panel(
+            Align.left(menuText),
+            border_style = "#782F40",
+            padding = (1,4)
+            )
+    )
 
 def get_menu_choice():
     while True:
@@ -164,7 +173,7 @@ def get_menu_choice():
 
 menu = -1
 cur, conn = connectToDB()
-print("Current tables in databse:")
+print("Current tables in database:")
 cur.execute("SHOW TABLES;")
 for(table,) in cur:
     print(table)
