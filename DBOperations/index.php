@@ -5,8 +5,18 @@
 //IT ALSO REQUIRES THE DB TO BE NAMED PROJECTTEST.
 //WORKS AT http://localhost/phpmyadmin/index.php
 
+//REQUIRES FILE "rfid_app.conf", on Pi309 this is at /etc/ as expressed below
 
-$conn = new mysqli("localhost", "root", "", "rfid");
+$config = parse_ini_file('/etc/rfid_app.conf');
+
+
+$conn = new mysqli(
+	$config['DB_HOST'],
+	$config['DB_USER'],
+	$config['DB_PASS'],
+	$config['DB_NAME']
+);
+
 if ($conn->connect_error) {
     die("ERROR\nConnection failed: " . $conn->connect_error);
 }
