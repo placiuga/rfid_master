@@ -132,6 +132,61 @@ void printMacAddress(byte mac[]) {
     Serial.println();
 }
 
+bool verifyEquipment(String machineID, String server)
+{
+    if (client.connect(server.c_str(), 80)) {
+		Serial.println("Verifying machineID against server...");
+        String url = "/rfid/verify.php?machineID=" + machineID;
+        client.println("GET " + url + " HTTP/1.1");
+        client.println("Host: " + server);
+        client.println("Connection: close");
+        client.println();
+
+        unsigned long startTime = millis();
+        while (client.connected() && !client.available()) {
+            if (millis() - startTime > 3000) {
+                Serial.println("Timeout waiting for response");
+                client.stop();
+                return;
+            }
+            delay(10);
+        }
+
+        String response = "";
+        while (client.available()) {
+            char c = client.read();
+            response += c;
+        }
+        client.stop();
+		Serial.println(response);
+
+        //look for a blank line to know when to end
+        int bodyIndex = response.indexOf("\r\n\r\n");
+        String body = (bodyIndex != -1) ? response.substring(bodyIndex + 4) : response;
+        body.trim(); //remove white space + newlines
+
+        if (body.indexOf("VALID") != -1) {
+            Serial.println("MachineID " + machineID + " already exists and is valid");
+            return true;
+        } else if (body.indexOf("CREATED") != -1) {
+            Serial.println("MachineID " + machineID + " did not exist! Machine created and valid");
+            return true;
+        } else
+        {
+            Serial.println("FATAL ERRROR: MachineID could not be verified or created. Check server connection and database.");
+            Serial.println("Response from server: " + body);
+            return false;
+        }
+        
+    }
+    else {
+        client.stop();
+        Serial.println("Connection failed");
+        return false;
+	}
+
+}
+
 
 //note: in sendData, server will be set to SECRET_IP (which will probably be pi). For testing, put your own IP in
 //arduino_secrets.h, or replace server[] in enterprise.ino
