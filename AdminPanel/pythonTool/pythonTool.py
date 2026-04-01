@@ -98,6 +98,73 @@ def create_user(conn):
         print(f"Error executing query: {e}")
 
 
+def delete_user(conn):
+    print("Configuring PN532 RFID reader...")
+    pn532 = setup_pn532()
+    print("Waiting for tag...")
+    while True:
+        uid = pn532.read_passive_target(timeout=1.0)
+        if uid is not None:
+            print("Tag detected! UID:", [hex(i) for i in uid])
+            break
+    uidStr = ''.join(f'{i:02X}' for i in uid) ##Convert UID to hex string (joins i in uid with uppercase hex, pad to 2 chars to add leading zero)
+    print(f"Searching database for user with RFID UID: {uidStr}")
+    queryUser = f"SELECT * FROM UserTable WHERE rfid_uid = '{uidStr}'"
+    try:
+        cur = conn.cursor()
+        cur.execute(queryUser)
+        if cur.description:
+            cols = [desc[0] for desc in cur.description]
+            rows = cur.fetchall()
+
+            table = Table(title = "Query Results")
+            for col in cols:
+                table.add_column(col)
+            for row in rows:
+                table.add_row(*[str(value) for value in row])
+
+            console = Console()
+            console.print(table)
+            if not rows:
+                print("(no rows returned from UserTable)")
+    except mariadb.Error as e:
+        print(f"Error executing query: {e}")
+
+    queryAuth = f"SELECT * FROM AuthorizationTable WHERE rfid_uid = '{uidStr}'"
+    try:
+        cur = conn.cursor()
+        cur.execute(queryAuth)
+        if cur.description:
+            cols = [desc[0] for desc in cur.description]
+            rows = cur.fetchall()
+
+            table = Table(title = "Query Results")
+            for col in cols:
+                table.add_column(col)
+            for row in rows:
+                table.add_row(*[str(value) for value in row])
+
+            console = Console()
+            console.print(table)
+            if not rows:
+                print("(no rows returned from AuthorizationTable)")
+    except mariadb.Error as e:
+        print(f"Error executing query: {e}")
+    print("WARNING: This will permanently delete the user and all their authorization records from the database. Type 'confirm' to proceed or 'cancel' to abort.")
+    confirm = input("Confirm> ").strip()
+    if confirm.lower() == 'confirm':
+        deleteUserQuery = f"DELETE FROM UserTable WHERE rfid_uid = '{uidStr}'"
+        deleteAuthQuery = f"DELETE FROM AuthorizationTable WHERE rfid_uid = '{uidStr}'"
+        try:
+            cur = conn.cursor()
+            cur.execute(deleteUserQuery)
+            cur.execute(deleteAuthQuery)
+            conn.commit()
+            print(f"\nUser and associated authorization records deleted successfully.")
+        except mariadb.Error as e:
+            print(f"Error executing delete queries: {e}")
+
+
 def executeSQL(conn):
     print("WARNING: This option allows you to execute raw SQL queries on the database. Use with caution!")
     print("Type 'cancel' to return to main menu.")
@@ -139,6 +206,7 @@ def printMenu():
         "[bold #EE7624]Main Menu[/bold #EE7624]\n"
         "[bold]1: [/] Create user from tag\n"
         "[bold]2: [/] Execute raw SQL query (ADVANCED)\n"
+        "[bold]3: [/] Delete user by tag\n"
         "\n[bold]0: [/] Exit\n"
          )
 
@@ -189,6 +257,8 @@ while menu != 0:
         create_user(conn)
     elif menu == 2:
         executeSQL(conn)
+    elif menu == 3:
+        delete_user(conn)
 
 
 print("Exiting program. Goodbye!")
