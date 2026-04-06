@@ -62,6 +62,7 @@ def setup_pn532():
 
 def exit_program():
     print("Exiting program. Goodbye!")
+    
     exit()
 
 def create_user(conn):
@@ -164,6 +165,47 @@ def delete_user(conn):
         except mariadb.Error as e:
             print(f"Error executing delete queries: {e}")
 
+def editTables(conn):
+    console = Console()
+    cur = conn.cursor()
+
+    table = Table(title="Database Tables")
+    table.add_column('#', justify="right", style="dim")
+    table.add_column("Table Name", style="cyan", no_wrap=True)
+
+    numTables = 0
+    tables = []
+    cur.execute("SHOW TABLES;")
+    for i, (tableName,) in enumerate(cur, start=1):
+        table.add_row(str(i), tableName)
+        numTables = numTables + 1
+        tables[i] = tableName
+
+    console.print(table)
+
+    sel = input("Choose a table to edit or type 'cancel' to return to main menu:")
+    if(sel.lower() == 'cancel'):
+        print("Returning to main menu.")
+        return
+    try:
+        selNum = int(sel)
+        if selNum < 1 or selNum > numTables:
+            print("Invalid selection. Returning to main menu.")
+            return
+        cur.execute(f"SELECT * FROM {tables[selNum]};")
+        cols = [desc[0] for desc in cur.description]
+        rows = cur.fetchall()
+        table = Table(title = f"Contents of {tables[selNum]}")
+        for col in cols:
+            table.add_column(col)
+            for row in rows:
+                table.add_row(*[str(value) for value in row])
+        console.print(table)
+
+    except ValueError:
+        print("Invalid input. Returning to main menu.")
+        return
+
 
 def executeSQL(conn):
     print("WARNING: This option allows you to execute raw SQL queries on the database. Use with caution!")
@@ -207,6 +249,7 @@ def printMenu():
         "[bold]1: [/] Create user from tag\n"
         "[bold]2: [/] Execute raw SQL query (ADVANCED)\n"
         "[bold]3: [/] Delete user by tag\n"
+        "[bold]4: [/] Edit database tables [/bold]\n"
         "\n[bold]0: [/] Exit\n"
          )
 
@@ -259,6 +302,8 @@ while menu != 0:
         executeSQL(conn)
     elif menu == 3:
         delete_user(conn)
+    elif menu == 4:
+        editTables(conn)
 
 
 print("Exiting program. Goodbye!")
