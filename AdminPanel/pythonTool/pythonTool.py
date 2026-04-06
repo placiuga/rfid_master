@@ -271,7 +271,7 @@ def get_menu_choice():
         try:
             choice = int(input("Enter menu number: "))
             
-            if choice in [0, 1, 2, 3]:
+            if choice in [0, 1, 2, 3, 4]:
                 return choice
             else:
                 print("Invalid choice. \n")
