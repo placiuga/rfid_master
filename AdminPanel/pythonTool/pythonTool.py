@@ -198,8 +198,8 @@ def editTables(conn):
         table = Table(title = f"Contents of {tables[selNum]}")
         for col in cols:
             table.add_column(col)
-            for row in rows:
-                table.add_row(*[str(value) for value in row])
+        for row in rows:
+            table.add_row(*[str(value) for value in row])
         console.print(table)
 
     except ValueError:
