@@ -192,10 +192,10 @@ def editTables(conn):
         if selNum < 1 or selNum > numTables:
             print("Invalid selection. Returning to main menu.")
             return
-        cur.execute(f"SELECT * FROM {tables[selNum]};")
+        cur.execute(f"SELECT * FROM {tables[selNum-1]};")
         cols = [desc[0] for desc in cur.description]
         rows = cur.fetchall()
-        table = Table(title = f"Contents of {tables[selNum]}")
+        table = Table(title = f"Contents of {tables[selNum-1]}")
         for col in cols:
             table.add_column(col)
         for row in rows:
