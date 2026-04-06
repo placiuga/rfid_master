@@ -66,7 +66,7 @@ void enterpriseConnect(const char* ssid, const char* user, const char* pass) {
 
 void serverConnect(const char* server)
 {
-    //Code to connect to "server" (my laptop for now)
+    //Code to connect to "server" 
     if (client.connect(server, 80)) {
         Serial.println("Connected to server:");
         client.print("GET / HTTP/1.1\r\n");
@@ -75,7 +75,7 @@ void serverConnect(const char* server)
         client.print("\r\n");
         client.print("Connection: close\r\n");
         client.print("\r\n");
-
+        
     }
     else {
         Serial.println("Connection failed");
@@ -277,4 +277,20 @@ void sendData(String server, String machineID, String rfid_uid, String action) {
     else {
         Serial.println("Connection failed");
     }
+}
+
+String getMACString()
+{
+    byte mac[6];
+    WiFi.macAddress(mac);
+    String macString = "";
+
+    for (int i = 5; i >= 0; i--) {
+        if (mac[i] < 16) {
+            macString += "0";
+        }
+        macString += String(mac[i], HEX);
+    }
+    macString.toUpperCase();
+    return macString;
 }

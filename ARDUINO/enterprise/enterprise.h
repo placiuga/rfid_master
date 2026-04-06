@@ -16,5 +16,6 @@ void serverConnect(const char* server);
 void printWifiData();
 void printCurrentNet();
 void printMacAddress(byte mac[]);
+String getMACString();
 void sendData(String server, String machineID, String rfid_uid, String action);
-bool verifyEquipment(String machineID, String server)
+bool verifyEquipment(String machineID, String server);

@@ -27,8 +27,13 @@ void setup() {
   LEDsetup();
   serialConnect();
 	enterpriseConnect(ssid, user, pass);
-	serverConnect(server);
-  pixels.show();  
+	//serverConnect(server);
+  Serial.println("getMACString: " + getMACString())
+  if(verifyEquipment(getMACString(), server))
+  {
+    pixels.show();  
+  }
+  
 }
 
 void loop() {

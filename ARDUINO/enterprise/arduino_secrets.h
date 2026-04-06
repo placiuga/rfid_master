@@ -1,3 +1,4 @@
 #define SECRET_SSID "FSUSecure"
-#define SECRET_USER "user"
-#define SECRET_PASS "pass"
+#define SECRET_USER "USER"
+#define SECRET_PASS "PASS"
+#define SECRET_IP "146.201.27.22"
