@@ -179,7 +179,7 @@ def editTables(conn):
     for i, (tableName,) in enumerate(cur, start=1):
         table.add_row(str(i), tableName)
         numTables = numTables + 1
-        tables[i] = tableName
+        tables.append(tableName)
 
     console.print(table)
 
@@ -249,7 +249,7 @@ def printMenu():
         "[bold]1: [/] Create user from tag\n"
         "[bold]2: [/] Execute raw SQL query (ADVANCED)\n"
         "[bold]3: [/] Delete user by tag\n"
-        "[bold]4: [/] Edit database tables [/bold]\n"
+        "[bold]4: [/] Edit database tables \n"
         "\n[bold]0: [/] Exit\n"
          )
 
