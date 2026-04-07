@@ -21,21 +21,43 @@ char ssid[] = SECRET_SSID;  // your WPA2 enterprise network SSID (name)
 char user[] = SECRET_USER;  // your WPA2 enterprise username
 char pass[] = SECRET_PASS;  // your WPA2 enterprise password
 int status = WL_IDLE_STATUS;     // the WiFi radio's status
-String machineID = "1";  
+String machineID = "1";
+uint8_t uid[] = {0, 0, 0, 0, 0, 0, 0};
+uint8_t uidLength;
+bool cardPresent = false;
+bool authorized = false;
+String lastUID = "";  
 
 void setup() {
   LEDsetup();
+  nfcStartup();
   serialConnect();
 	enterpriseConnect(ssid, user, pass);
 	//serverConnect(server);
-  Serial.println("getMACString: " + getMACString())
+  Serial.println("getMACString: " + getMACString());
   if(verifyEquipment(getMACString(), server))
   {
     pixels.show();  
   }
-  
+  digitalWrite(SSRPIN, LOW);  
 }
 
 void loop() {
+  String currentUID = "";
+  while(nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength)) {
+    currentUID = uidToString(uid, uidLength);
+    if(!cardPresent) {
+      cardPresent = true;
+      lastUID = currentUID;
+      authorized = sendData(server, machineID, currentUID, "start");
+    }
+    break;
+  }
 
+  if (cardPresent && (currentUID != lastUID)) {
+    cardPresent = false;
+    if (authorized) {
+      sendData(server, machineID, lastUID, "end");
+    }
+  }
 }

@@ -1,5 +1,6 @@
 #include "enterprise.h"
 
+Adafruit_PN532 nfc(SCK, MISO, MOSI, SS);
 WS2812 pixels(10, 13);
 
 void serialConnect() {
@@ -190,7 +191,7 @@ bool verifyEquipment(String machineID, String server)
 
 //note: in sendData, server will be set to SECRET_IP (which will probably be pi). For testing, put your own IP in
 //arduino_secrets.h, or replace server[] in enterprise.ino
-void sendData(String server, String machineID, String rfid_uid, String action) {
+bool sendData(String server, String machineID, String rfid_uid, String action) {
     //stop previous just in case
     client.stop();
 
@@ -238,32 +239,41 @@ void sendData(String server, String machineID, String rfid_uid, String action) {
 
         //check for authorization response (or denial, or error)
         if (body.indexOf("AUTHORIZED") != -1) {
-            Serial.println("Access granted");
             digitalWrite(LED_BUILTIN, HIGH);           
             if(action == "start") {
+                Serial.println("Access granted");
                 pixels.setPixelColor(1, 0, 255, 0);         //green LED
                 pixels.show();
+                digitalWrite(SSRPIN, HIGH);
+                return true;
             }
-            else if(action == "end" ) {
-                pixels.setPixelColor(1, 255, 255, 0);       //yellow LED
+            else if(action == "end") {
+                Serial.println("Ending Session");
+                pixels.setPixelColor(1, 255, 255, 0);
                 pixels.show();
+                digitalWrite(SSRPIN, LOW);
+                return true;
             }
+
         } 
         else if (body.indexOf("DENIED") != -1) {
             Serial.println("Access denied");
             pixels.setPixelColor(1, 255, 0, 0);             //red LED
             pixels.show();
             delay(1000);
-            pixels.setPixelColor(1, 255, 255, 0);           
+            pixels.setPixelColor(1, 255, 255, 0); 
             pixels.show();
+            digitalWrite(SSRPIN, LOW);
+            return false;
         } 
         else if (body.indexOf("ERROR") != -1) {
             pixels.setPixelColor(1, 255, 0, 0); 
             pixels.show();
             delay(1000);
-            pixels.setPixelColor(1, 255, 255, 0);      
+            pixels.setPixelColor(1, 255, 255, 0); 
             pixels.show();
-            
+            digitalWrite(SSRPIN, LOW);
+            return false;
         } 
         else {
             Serial.println("Unknown response");
@@ -272,6 +282,8 @@ void sendData(String server, String machineID, String rfid_uid, String action) {
             delay(1000);
             pixels.setPixelColor(1, 255, 255, 0); 
             pixels.show();
+            digitalWrite(SSRPIN, LOW);
+            return false;
         }
     }
     else {
@@ -293,4 +305,27 @@ String getMACString()
     }
     macString.toUpperCase();
     return macString;
+}
+
+void nfcStartup() {
+    nfc.begin();
+    uint32_t versiondata = nfc.getFirmwareVersion();
+    if (!versiondata) {
+        Serial.print("Didn't find PN53x board");
+        while (1); // halt
+    }
+    nfc.SAMConfig();
+    nfc.setPassiveActivationRetries(5);
+}
+
+String uidToString(uint8_t *uid, uint8_t uidLength) {
+    String uidString = "";
+
+    for (uint8_t i = 0; i < uidLength; i++) {
+        if (uid[i] < 0x10) uidString += "0";  // leading zero
+        uidString += String(uid[i], HEX);
+    }
+
+    uidString.toUpperCase();
+    return uidString;
 }
