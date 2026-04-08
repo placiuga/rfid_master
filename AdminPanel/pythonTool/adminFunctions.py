@@ -1,4 +1,3 @@
-##adminFunctions.py
 import board
 import busio
 import digitalio
@@ -10,6 +9,72 @@ from rich.panel import Panel
 from rich.align import Align
 import mariadb
 import sys
+
+def authorizeNewUser(conn):
+    print("Configuring PN532 RFID reader...")
+    pn532 = setup_pn532()
+    print("Waiting for tag...")
+    while True:
+        uid = pn532.read_passive_target(timeout=1.0)
+        if uid is not None:
+            print("Tag detected! UID:", [hex(i) for i in uid])
+            break
+    uidStr = ''.join(f'{i:02X}' for i in uid) ##Convert UID to hex string (join i in uid with uppercase hex, pad to 2 chars to add leading zero)
+    try:
+        cur = conn.cursor()
+        query = f"SELECT * FROM UserTable WHERE rfid_uid = '{uidStr}'"
+        cur.execute(query)
+        user = cur.fetchone()
+        if user is None:
+            print("Error: No user found with this RFID UID. Please create a user before authorizing.")
+            return
+        print(f"User found: {user[1]} (UserID: {user[0]}, FSUID: {user[2]}, Status: {user[3]})")
+        print("Showing available machines:")
+        queryEquip = "SELECT * FROM MachineTable"
+        cur.execute(queryEquip)
+        equipment = cur.fetchall()
+        table = Table(title = "MachineTable")
+
+        cols = [desc[0] for desc in cur.description]
+        for col in cols:
+            table.add_column(col)
+        for row in equipment:
+            table.add_row(*[str(value) for value in row])
+
+        console = Console()
+        console.print(table)
+
+        equipSelection = input("Enter the MachineID of the machine to authorize access to:")
+        while not any(str(row[0]) == equipSelection for row in equipment):
+            print("Invalid MachineID. Please enter a valid MachineID from the MachineTable.")
+            equipSelection = input("Enter the MachineID of the machine to authorize access to (or type 'cancel' to leave):")
+            if equipSelection.lower() == 'cancel':
+                print("Authorization cancelled. Returning to main menu.")
+                return
+
+        machineName = next(row[1] for row in equipment if str(row[0]) == equipSelection)
+        print(f"Selected machine: {machineName} (MachineID: {equipSelection})")
+        notes = input("Enter any notes for this authorization (up to 255 chars) or leave blank:")
+        if len(notes) > 255:
+            print("Notes too long, truncating to 255 characters.")
+            notes = notes[:255]
+
+        grantedBy = input("Enter your name to be recorded as the grantor of this authorization:")
+
+        auth = input(f"Confirm that you want to authorize user {user[1]} (UserID: {user[0]}) for machine {machineName} with MachineID {equipSelection}. Type 'confirm' to proceed or 'cancel' to abort.")
+        if auth.strip().lower() == 'confirm':
+            cur.execute(
+                 "INSERT INTO MachineAuthorizations (UserID, MachineID, notes, granted_by) VALUES (?, ?, ?, ?)",
+                 (user[0], equipSelection, notes, grantedBy)
+            )
+            conn.commit()
+            print("Authorization successful! Record added to AuthorizationTable.")
+        else:
+            print("Authorization cancelled. Returning to main menu.")
+            return
+
+    except mariadb.Error as e:
+        print(f"Error executing query: {e}")
 
 
 def setup_pn532():
@@ -198,4 +263,5 @@ def executeSQL(conn):
 
     except mariadb.Error as e:
         print(f"Error executing query: {e}")
+
 

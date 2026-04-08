@@ -1,4 +1,4 @@
-from adminFunctions import setup_pn532, create_user, delete_user, executeSQL, editTables
+from adminFunctions import setup_pn532, create_user, delete_user, executeSQL, editTables, authorizeNewUser
 from rich import print
 from rich.table import Table
 from rich.console import Console
@@ -62,6 +62,7 @@ def printMenu():
         "[bold]2: [/] Execute raw SQL query (ADVANCED)\n"
         "[bold]3: [/] Delete user by tag\n"
         "[bold]4: [/] Edit database tables \n"
+        "[bold]5: [/] Authorize new user with tag\n"
         "\n[bold]0: [/] Exit\n"
          )
 
@@ -112,6 +113,8 @@ while menu != 0:
         delete_user(conn)
     elif menu == 4:
         editTables(conn)
+    elif menu == 5:
+        authorizeNewUser(conn)
 
 
 print("Exiting program. Goodbye!")
