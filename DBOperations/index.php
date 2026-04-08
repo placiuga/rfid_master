@@ -39,7 +39,7 @@ $studentID = null;
 
 if ($userExists) {
     $row = $userResult->fetch_assoc();
-    $studentID = $row['StudentID'];
+    $studentID = $row['UserID'];
 }
 
 //machine existence check
