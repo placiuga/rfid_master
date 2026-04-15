@@ -21,7 +21,7 @@ char ssid[] = SECRET_SSID;  // your WPA2 enterprise network SSID (name)
 char user[] = SECRET_USER;  // your WPA2 enterprise username
 char pass[] = SECRET_PASS;  // your WPA2 enterprise password
 int status = WL_IDLE_STATUS;     // the WiFi radio's status
-String machineID = "1";
+String machineID = "2";
 uint8_t uid[] = {0, 0, 0, 0, 0, 0, 0};
 uint8_t uidLength;
 bool cardPresent = false;
@@ -29,11 +29,13 @@ bool authorized = false;
 String lastUID = "";  
 
 void setup() {
+  pinMode(SSRPIN, OUTPUT);
+  digitalWrite(SSRPIN, LOW); 
   LEDsetup();
   nfcStartup();
   serialConnect();
 	enterpriseConnect(ssid, user, pass);
-	//serverConnect(server);
+	serverConnect(server);
   Serial.println("getMACString: " + getMACString());
   if(verifyEquipment(getMACString(), server))
   {
@@ -46,7 +48,6 @@ void setup() {
         pixels.show();
     }
   }
-  digitalWrite(SSRPIN, LOW);  
 }
 
 void loop() {
