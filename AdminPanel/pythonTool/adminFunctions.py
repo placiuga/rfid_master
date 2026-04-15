@@ -173,7 +173,7 @@ def delete_user(conn, pn532):
     print("WARNING: This will permanently delete the user and all their authorization records from the database. Type 'confirm' to proceed or 'cancel' to abort.")
     confirm = input("Confirm> ").strip()
     if confirm.lower() == 'confirm':
-        deleteAuthQuery = f"DELETE FROM MachineAuthorizations WHERE rfid_uid = '{uidStr}'"
+        deleteAuthQuery = f"DELETE FROM MachineAuthorizations WHERE UserID = '{userIDint}'"
         try:
             cur = conn.cursor()
             cur.execute(deleteAuthQuery)
