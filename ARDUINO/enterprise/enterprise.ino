@@ -37,7 +37,14 @@ void setup() {
   Serial.println("getMACString: " + getMACString());
   if(verifyEquipment(getMACString(), server))
   {
-    pixels.show();  
+    if(getMachineID(getMACString(), server) == "error") {
+      Serial.println("Error retrieving machineID. Check server connection and database.");
+      break;
+	}
+    else {
+        machineID = getMachineID(getMACString(), server);
+        pixels.show();
+    }
   }
   digitalWrite(SSRPIN, LOW);  
 }

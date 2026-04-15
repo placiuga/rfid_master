@@ -29,3 +29,4 @@ bool sendData(String server, String machineID, String rfid_uid, String action);
 bool verifyEquipment(String machineID, String server);
 void nfcStartup();
 String uidToString(uint8_t *uid, uint8_t uidLength);
+String getMachineID(String machineMAC, String server);

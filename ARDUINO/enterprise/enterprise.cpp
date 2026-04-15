@@ -329,3 +329,41 @@ String uidToString(uint8_t *uid, uint8_t uidLength) {
     uidString.toUpperCase();
     return uidString;
 }
+
+String getMachineID(String machineMAC, String server) {
+    client.stop();
+    if (client.connect(server.c_str(), 80)) {
+        Serial.println("Verifying machineID against server...");
+        String url = "/rfid/getMachineID.php?machineMAC=" + machineMAC;
+        client.println("GET " + url + " HTTP/1.1");
+        client.println("Host: " + server);
+        client.println("Connection: close");
+        client.println();
+
+        unsigned long startTime = millis();
+        while (client.connected() && !client.available()) {
+            if (millis() - startTime > 3000) {
+                Serial.println("Timeout waiting for response");
+                client.stop();
+                return;
+            }
+            delay(10);
+        }
+
+        // skip headers
+        while (client.available()) {
+            String line = client.readStringUntil('\n');
+            if (line == "\r") break;  // end of headers
+        }
+
+        String id = client.readStringUntil('\n');
+        id.trim();  // remove whitespace
+
+        return id;
+    }
+    else {
+        client.stop();
+        Serial.println("Connection failed");
+        return "error";
+    }
+}
