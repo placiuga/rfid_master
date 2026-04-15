@@ -10,9 +10,8 @@ from rich.align import Align
 import mariadb
 import sys
 
-def authorizeNewUser(conn):
+def authorizeNewUser(conn, pn532):
     print("Configuring PN532 RFID reader...")
-    pn532 = setup_pn532()
     print("Waiting for tag...")
     while True:
         uid = pn532.read_passive_target(timeout=1.0)
@@ -87,9 +86,8 @@ def setup_pn532():
     return pn532
 
 
-def create_user(conn):
+def create_user(conn, pn532):
     print("Configuring PN532 RFID reader...")
-    pn532 = setup_pn532()
     print("Waiting for tag...")
     while True:
         uid = pn532.read_passive_target(timeout=1.0)
@@ -121,9 +119,8 @@ def create_user(conn):
         print(f"Error executing query: {e}")
 
 
-def delete_user(conn):
+def delete_user(conn, pn532):
     print("Configuring PN532 RFID reader...")
-    pn532 = setup_pn532()
     print("Waiting for tag...")
     while True:
         uid = pn532.read_passive_target(timeout=1.0)

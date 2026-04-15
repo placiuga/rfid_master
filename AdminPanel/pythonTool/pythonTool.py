@@ -28,6 +28,7 @@ print(r"""
 Welcome to the RFID Lab Access admin panel!
 """)
 print("Attempting to connect to database...")
+pn532 = setup_pn532()
 
 
 def connectToDB():
@@ -106,15 +107,15 @@ while menu != 0:
     if menu == 0:
         exit_program()
     elif menu == 1:
-        create_user(conn)
+        create_user(conn, pn532)
     elif menu == 2:
         executeSQL(conn)
     elif menu == 3:
-        delete_user(conn)
+        delete_user(conn, pn532)
     elif menu == 4:
         editTables(conn)
     elif menu == 5:
-        authorizeNewUser(conn)
+        authorizeNewUser(conn, pn532)
 
 
 print("Exiting program. Goodbye!")
