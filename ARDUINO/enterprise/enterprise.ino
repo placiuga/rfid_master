@@ -21,7 +21,7 @@ char ssid[] = SECRET_SSID;  // your WPA2 enterprise network SSID (name)
 char user[] = SECRET_USER;  // your WPA2 enterprise username
 char pass[] = SECRET_PASS;  // your WPA2 enterprise password
 int status = WL_IDLE_STATUS;     // the WiFi radio's status
-String machineID = "2";
+String machineID = "1";
 uint8_t uid[] = {0, 0, 0, 0, 0, 0, 0};
 uint8_t uidLength;
 bool cardPresent = false;
