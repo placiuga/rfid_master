@@ -1,7 +1,7 @@
 #include "enterprise.h"
 
 Adafruit_PN532 nfc(SCK, MISO, MOSI, SS);
-WS2812 pixels(10, 13);
+WS2812 pixels(10, 7);
 
 void serialConnect() {
     //Initialize serial and wait for port to open:
@@ -23,7 +23,6 @@ void LEDsetup() {
 }
 
 void enterpriseConnect(const char* ssid, const char* user, const char* pass) {
-
     // check for the WiFi module:
     if (WiFi.status() == WL_NO_MODULE) {
         Serial.println("Communication with WiFi module failed!");
@@ -80,6 +79,7 @@ void serverConnect(const char* server)
     }
     else {
         Serial.println("Connection failed");
+        serverConnect(server);
     }
 
 }
@@ -148,7 +148,7 @@ bool verifyEquipment(String machineID, String server)
             if (millis() - startTime > 3000) {
                 Serial.println("Timeout waiting for response");
                 client.stop();
-                return;
+                return false;
             }
             delay(10);
         }
@@ -174,7 +174,7 @@ bool verifyEquipment(String machineID, String server)
             return true;
         } else
         {
-            Serial.println("FATAL ERRROR: MachineID could not be verified or created. Check server connection and database.");
+            Serial.println("FATAL ERROR: MachineID could not be verified or created. Check server connection and database.");
             Serial.println("Response from server: " + body);
             return false;
         }
@@ -218,7 +218,7 @@ bool sendData(String server, String machineID, String rfid_uid, String action) {
             if (millis() - startTime > 3000) {
                 Serial.println("Timeout waiting for response");
                 client.stop();
-                return;
+                return false;
             }
             delay(10);
         }
@@ -260,29 +260,29 @@ bool sendData(String server, String machineID, String rfid_uid, String action) {
             Serial.println("Access denied");
             pixels.setPixelColor(1, 255, 0, 0);             //red LED
             pixels.show();
+            digitalWrite(SSRPIN, LOW);
             delay(1000);
             pixels.setPixelColor(1, 255, 255, 0); 
             pixels.show();
-            digitalWrite(SSRPIN, LOW);
             return false;
         } 
         else if (body.indexOf("ERROR") != -1) {
             pixels.setPixelColor(1, 255, 0, 0); 
             pixels.show();
+            digitalWrite(SSRPIN, LOW);
             delay(1000);
             pixels.setPixelColor(1, 255, 255, 0); 
             pixels.show();
-            digitalWrite(SSRPIN, LOW);
             return false;
         } 
         else {
             Serial.println("Unknown response");
             pixels.setPixelColor(1, 255, 0, 0); 
             pixels.show();
+            digitalWrite(SSRPIN, LOW);
             delay(1000);
             pixels.setPixelColor(1, 255, 255, 0); 
             pixels.show();
-            digitalWrite(SSRPIN, LOW);
             return false;
         }
     }
