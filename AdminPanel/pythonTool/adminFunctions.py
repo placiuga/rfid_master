@@ -67,7 +67,7 @@ def authorizeNewUser(conn, pn532):
                  (equipSelection, notes, grantedBy, user[0])
             )
             conn.commit()
-            print("Authorization successful! Record added to AuthorizationTable.")
+            print("Authorization successful! Record added to MachineAuthorizations.")
         else:
             print("Authorization cancelled. Returning to main menu.")
             return
@@ -142,7 +142,7 @@ def delete_user(conn, pn532):
                 table.add_column(col)
             for row in rows:
                 table.add_row(*[str(value) for value in row])
-
+	    userIDint = rows[0][0]
             console = Console()
             console.print(table)
             if not rows:
@@ -150,7 +150,7 @@ def delete_user(conn, pn532):
     except mariadb.Error as e:
         print(f"Error executing query: {e}")
 
-    queryAuth = f"SELECT * FROM AuthorizationTable WHERE rfid_uid = '{uidStr}'"
+    queryAuth = f"SELECT * FROM MachineAuthorizations WHERE UserID = '{userIDint}'"
     try:
         cur = conn.cursor()
         cur.execute(queryAuth)
@@ -167,17 +167,15 @@ def delete_user(conn, pn532):
             console = Console()
             console.print(table)
             if not rows:
-                print("(no rows returned from AuthorizationTable)")
+                print("(no rows returned from MachineAuthorizations)")
     except mariadb.Error as e:
         print(f"Error executing query: {e}")
     print("WARNING: This will permanently delete the user and all their authorization records from the database. Type 'confirm' to proceed or 'cancel' to abort.")
     confirm = input("Confirm> ").strip()
     if confirm.lower() == 'confirm':
-        deleteUserQuery = f"DELETE FROM UserTable WHERE rfid_uid = '{uidStr}'"
-        deleteAuthQuery = f"DELETE FROM AuthorizationTable WHERE rfid_uid = '{uidStr}'"
+        deleteAuthQuery = f"DELETE FROM MachineAuthorizations WHERE rfid_uid = '{uidStr}'"
         try:
             cur = conn.cursor()
-            cur.execute(deleteUserQuery)
             cur.execute(deleteAuthQuery)
             conn.commit()
             print(f"\nUser and associated authorization records deleted successfully.")
