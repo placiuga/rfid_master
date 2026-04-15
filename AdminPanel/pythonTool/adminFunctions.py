@@ -142,7 +142,7 @@ def delete_user(conn, pn532):
                 table.add_column(col)
             for row in rows:
                 table.add_row(*[str(value) for value in row])
-	    userIDint = rows[0][0]
+                userIDint = rows[0][0]
             console = Console()
             console.print(table)
             if not rows:
