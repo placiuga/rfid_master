@@ -63,8 +63,8 @@ def authorizeNewUser(conn, pn532):
         auth = input(f"Confirm that you want to authorize user {user[1]} (UserID: {user[0]}) for machine {machineName} with MachineID {equipSelection}. Type 'confirm' to proceed or 'cancel' to abort.")
         if auth.strip().lower() == 'confirm':
             cur.execute(
-                 "INSERT INTO MachineAuthorizations (UserID, MachineID, notes, granted_by) VALUES (?, ?, ?, ?)",
-                 (user[0], equipSelection, notes, grantedBy)
+                 "INSERT INTO MachineAuthorizations (MachineID, notes, granted_by, UserID) VALUES (?, ?, ?, ?)",
+                 (equipSelection, notes, grantedBy, user[0])
             )
             conn.commit()
             print("Authorization successful! Record added to AuthorizationTable.")
@@ -100,7 +100,7 @@ def create_user(conn, pn532):
     FSUID = input("Enter FSUID: ")
     status = input("Enter status (active/inactive): ")
     print(f"Creating user with name: {name}, userID: {userID}, FSUID: {FSUID}, status: {status}")
-    query = f"INSERT INTO UserTable (Name, UserID, FSUID, Status, rfid_uid) VALUES ('{name}', '{userID}', '{FSUID}', '{status}', '{uidStr}')"
+    query = f"INSERT INTO UserTable (UserID, Name, FSUID, Status, rfid_uid) VALUES ('{userID}', '{name}', '{FSUID}', '{status}', '{uidStr}')"
     print("Executing query:", query)
 
     try:
