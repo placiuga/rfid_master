@@ -21,7 +21,7 @@ char ssid[] = SECRET_SSID;  // your WPA2 enterprise network SSID (name)
 char user[] = SECRET_USER;  // your WPA2 enterprise username
 char pass[] = SECRET_PASS;  // your WPA2 enterprise password
 int status = WL_IDLE_STATUS;     // the WiFi radio's status
-String machineID = "2";
+String machineID;
 uint8_t uid[] = {0, 0, 0, 0, 0, 0, 0};
 uint8_t uidLength;
 bool cardPresent = false;
@@ -39,15 +39,16 @@ void setup() {
   Serial.println("getMACString: " + getMACString());
   if(verifyEquipment(getMACString(), server))
   {
-    if(getMachineID(getMACString(), server) == "error") {
+    String id = getMachineID(getMACString(), server);
+    if(id == "error") {
       Serial.println("Error retrieving machineID. Check server connection and database.");
-      break;
 	}
     else {
-        machineID = getMachineID(getMACString(), server);
+        machineID = id;
         pixels.show();
     }
   }
+  else Serial.println("Verification failed");
 }
 
 void loop() {
