@@ -15,8 +15,8 @@ void LEDsetup() {
     pixels.begin();
     pixels.clear();
     pixels.setBrightness(255);
-    pixels.setPixelColor(0, 255, 255, 0);
-    pixels.setPixelColor(1, 255, 255, 0);
+    pixels.setPixelColor(LEDWifi, 255, 255, 0);
+    pixels.setPixelColor(LEDAuth, 255, 255, 0);
     pixels.show();
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
@@ -52,7 +52,7 @@ void enterpriseConnect(const char* ssid, const char* user, const char* pass) {
         Serial.println("Connected");
         digitalWrite(LED_BUILTIN, HIGH);
         pixels.setBrightness(255);
-        pixels.setPixelColor(0, 0, 0, 255);
+        pixels.setPixelColor(LEDWifi, 0, 0, 255);
         pixels.show();
     }
 
@@ -242,14 +242,14 @@ bool sendData(String server, String machineID, String rfid_uid, String action) {
             digitalWrite(LED_BUILTIN, HIGH);           
             if(action == "start") {
                 Serial.println("Access granted");
-                pixels.setPixelColor(1, 0, 255, 0);         //green LED
+                pixels.setPixelColor(LEDAuth, 0, 255, 0);         //green LED
                 pixels.show();
                 digitalWrite(SSRPIN, HIGH);
                 return true;
             }
             else if(action == "end") {
                 Serial.println("Ending Session");
-                pixels.setPixelColor(1, 255, 255, 0);
+                pixels.setPixelColor(LEDAuth, 255, 255, 0);
                 pixels.show();
                 digitalWrite(SSRPIN, LOW);
                 return true;
@@ -258,31 +258,31 @@ bool sendData(String server, String machineID, String rfid_uid, String action) {
         } 
         else if (body.indexOf("DENIED") != -1) {
             Serial.println("Access denied");
-            pixels.setPixelColor(1, 255, 0, 0);             //red LED
+            pixels.setPixelColor(LEDAuth, 255, 0, 0);             //red LED
             pixels.show();
             digitalWrite(SSRPIN, LOW);
-            delay(1000);
-            pixels.setPixelColor(1, 255, 255, 0); 
-            pixels.show();
+            //delay(1000);
+            //pixels.setPixelColor(1, 255, 255, 0); 
+            //pixels.show();
             return false;
         } 
         else if (body.indexOf("ERROR") != -1) {
-            pixels.setPixelColor(1, 255, 0, 0); 
+            pixels.setPixelColor(LEDAuth, 255, 0, 0); 
             pixels.show();
             digitalWrite(SSRPIN, LOW);
-            delay(1000);
-            pixels.setPixelColor(1, 255, 255, 0); 
-            pixels.show();
+            //delay(1000);
+            //pixels.setPixelColor(1, 255, 255, 0); 
+            //pixels.show();
             return false;
         } 
         else {
             Serial.println("Unknown response");
-            pixels.setPixelColor(1, 255, 0, 0); 
+            pixels.setPixelColor(LEDAuth, 255, 0, 0); 
             pixels.show();
             digitalWrite(SSRPIN, LOW);
-            delay(1000);
-            pixels.setPixelColor(1, 255, 255, 0); 
-            pixels.show();
+            //delay(1000);
+            //pixels.setPixelColor(1, 255, 255, 0); 
+            //pixels.show();
             return false;
         }
     }

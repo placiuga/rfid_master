@@ -11,6 +11,8 @@
 #define MISO (5)   // Data In pin (D12)
 #define SS   (4)   // Slave Select (can be any digital pin, using D10 here)
 #define SSRPIN 8
+#define LEDWifi 9
+#define LEDAuth 0
 
 extern int status;
 extern WiFiClient client;

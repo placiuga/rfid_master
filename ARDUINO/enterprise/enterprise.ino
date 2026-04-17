@@ -64,9 +64,12 @@ void loop() {
   }
 
   if (cardPresent && (currentUID != lastUID)) {
+
     cardPresent = false;
     if (authorized) {
       sendData(server, machineID, lastUID, "end");
     }
+    pixels.setPixelColor(LEDAuth, 255, 255, 0); 
+    pixels.show();
   }
 }
